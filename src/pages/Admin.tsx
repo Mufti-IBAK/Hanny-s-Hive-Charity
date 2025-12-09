@@ -165,6 +165,7 @@ const GalleryUpload: React.FC = () => {
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth(); // Get current user for created_by field
 
   useEffect(() => {
     gsap.from(containerRef.current, { opacity: 0, scale: 0.95, duration: 0.5, ease: "back.out(1.7)" });
@@ -194,7 +195,8 @@ const GalleryUpload: React.FC = () => {
         category: formData.category,
         date_distributed: formData.date,
         description: formData.description,
-        image_url: formData.image_url
+        image_url: formData.image_url,
+        created_by: user?.id // Track the admin who uploaded this
       }]);
 
       if (error) throw error;
