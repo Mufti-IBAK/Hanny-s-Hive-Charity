@@ -1,0 +1,215 @@
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { Phone } from 'lucide-react';
+import gsap from 'gsap';
+
+const Auth: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
+  const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.from(containerRef.current, {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out"
+    });
+  }, []);
+
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address.' });
+      return false;
+    }
+    if (password.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
+      return false;
+    }
+    if (isSignUp) {
+      if (!fullName.trim()) {
+        setMessage({ type: 'error', text: 'Full Name is required.' });
+        return false;
+      }
+      if (!phoneNumber.trim() || phoneNumber.length < 10) {
+        setMessage({ type: 'error', text: 'Please enter a valid WhatsApp number.' });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone_number: phoneNumber, 
+            },
+          },
+        });
+        if (error) throw error;
+        setMessage({ type: 'success', text: 'Success! Check your email for the confirmation link.' });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        navigate('/admin'); 
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'An error occurred' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div ref={containerRef} className="auth-container">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="flex justify-center text-hive-red mb-4">
+            <img 
+                src="/assets/logo.jpg" 
+                alt="Hanny's Hive" 
+                className="h-24 w-auto object-contain"
+                onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Logo'; 
+                }}
+                />
+            </div>
+            <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
+            {isSignUp ? 'Join the Hive' : 'Sign in to your account'}
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+            {isSignUp ? 'Start your journey of impact.' : 'Welcome back, Hive Keeper.'}
+            </p>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border-t-4 border-hive-red">
+            <form className="space-y-6" onSubmit={handleAuth}>
+                {isSignUp && (
+                <>
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                    <div className="mt-1">
+                        <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
+                        />
+                    </div>
+                    </div>
+
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700">WhatsApp Number</label>
+                    <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                        type="tel"
+                        placeholder="+234..."
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
+                        />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Required for verification and distribution updates.</p>
+                    </div>
+                </>
+                )}
+
+                <div>
+                <label className="block text-sm font-medium text-gray-700">Email address</label>
+                <div className="mt-1">
+                    <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
+                    />
+                </div>
+                </div>
+
+                <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <div className="mt-1">
+                    <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
+                    />
+                </div>
+                </div>
+
+                {message && (
+                <div className={`p-4 rounded-md text-sm font-medium ${message.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                    {message.text}
+                </div>
+                )}
+
+                <div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors"
+                >
+                    {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
+                </button>
+                </div>
+            </form>
+
+            <div className="mt-6">
+                <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">
+                    {isSignUp ? 'Already have an account?' : 'New to Hanny\'s Hive?'}
+                    </span>
+                </div>
+                </div>
+
+                <div className="mt-6">
+                <button
+                    onClick={() => { setIsSignUp(!isSignUp); setMessage(null); }}
+                    className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors"
+                >
+                    {isSignUp ? 'Sign In Instead' : 'Create an Account'}
+                </button>
+                </div>
+            </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Auth;
