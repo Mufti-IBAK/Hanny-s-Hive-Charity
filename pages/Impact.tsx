@@ -1,10 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ImpactStory } from '../types';
-import { Filter, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Impact: React.FC = () => {
   const [filter, setFilter] = useState<string>('All');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const categories = ['All', 'Orphans', 'Widows', 'Community', 'Education'];
 
@@ -20,20 +25,35 @@ const Impact: React.FC = () => {
 
   const filteredStories = filter === 'All' ? stories : stories.filter(s => s.category === filter);
 
+  useEffect(() => {
+    // Re-run animation when filter changes
+    const ctx = gsap.context(() => {
+        gsap.from(".gallery-card", {
+            y: 50,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out",
+            clearProps: "all" // Allows filtering to work smoothly
+        });
+    }, containerRef);
+    return () => ctx.revert();
+  }, [filter]);
+
   return (
-    <div className="bg-white min-h-screen">
+    <div ref={containerRef} className="bg-white min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">Impact Gallery</h1>
+          <h1 className="text-4xl font-bold mb-4 animate-fade-in">Impact Gallery</h1>
           <p className="text-gray-500">Visual proof of your kindness. Updated monthly.</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="sticky top-20 z-40 bg-white/95 backdrop-blur border-b border-gray-200 py-4">
+      <div className="sticky top-20 z-40 bg-white/95 backdrop-blur border-b border-gray-200 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center gap-2">
-          {categories.map((cat) => (
+          {categories.map((cat, idx) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
@@ -53,7 +73,7 @@ const Impact: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredStories.map((story) => (
-            <div key={story.id} className="group relative bg-white border border-gray-200 overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <div key={story.id} className="gallery-card group relative bg-white border border-gray-200 overflow-hidden rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
               <div className="aspect-square overflow-hidden bg-gray-100">
                 <img src={story.image_url} alt={story.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               </div>

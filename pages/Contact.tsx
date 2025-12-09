@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaqItem } from '../types';
 import { Phone, Mail, MapPin, Plus, Minus, Send } from 'lucide-react';
+import gsap from 'gsap';
 
 const Contact: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,6 +15,39 @@ const Contact: React.FC = () => {
     message: ''
   });
   const [status, setStatus] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Animate left column (Form) from left
+      gsap.from(".contact-left", {
+        x: -50,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.out"
+      });
+      
+      // Animate right column (FAQ) from right
+      gsap.from(".contact-right", {
+        x: 50,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.2,
+        ease: "power2.out"
+      });
+
+      // Animate individual FAQ items
+      gsap.from(".faq-item", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 0.6,
+        delay: 0.6,
+        ease: "power2.out"
+      });
+
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   const faqs: FaqItem[] = [
     {
@@ -60,11 +96,11 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-16">
+    <div ref={containerRef} className="bg-white min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-16 overflow-hidden">
         
         {/* Left Column: Form & Info */}
-        <div>
+        <div className="contact-left">
           <h1 className="text-4xl font-bold mb-2">Get in Touch</h1>
           <p className="text-gray-600 mb-8">Have questions or need to verify a campaign? We are here.</p>
 
@@ -128,22 +164,22 @@ const Contact: React.FC = () => {
               onChange={handleInputChange}
               className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none"
             ></textarea>
-            <button className="bg-black text-white font-bold py-3 px-8 rounded hover:bg-gray-800 transition flex items-center">
+            <button className="bg-black text-white font-bold py-3 px-8 rounded hover:bg-gray-800 transition flex items-center transform hover:-translate-y-1 duration-200">
                <Send className="h-4 w-4 mr-2" /> Send Message
             </button>
           </form>
         </div>
 
         {/* Right Column: FAQ */}
-        <div>
-          <div className="bg-hive-red p-8 rounded-xl text-white mb-8">
+        <div className="contact-right">
+          <div className="bg-hive-red p-8 rounded-xl text-white mb-8 shadow-lg">
             <h2 className="text-2xl font-bold mb-2">Common Questions</h2>
             <p className="opacity-90">Everything you need to know about how the Hive operates.</p>
           </div>
 
           <div className="space-y-4">
             {faqs.map((faq, idx) => (
-              <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={idx} className="faq-item border border-gray-200 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
                   className="w-full flex justify-between items-center p-4 text-left font-bold bg-white hover:bg-gray-50 transition"

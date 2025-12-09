@@ -1,11 +1,12 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// NOTE: In a real production app, these should be in a .env file
-// For this environment, we will use placeholders. You MUST replace these 
-// with your actual Supabase Project URL and Anon Key from your Supabase Dashboard.
+// Support both Vite (import.meta.env) and standard process.env
+// Fix: Cast import.meta to any to resolve type error "Property 'env' does not exist on type 'ImportMeta'"
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY || '';
 
-const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('Supabase URL or Key is missing. Check your .env file.');
+}
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

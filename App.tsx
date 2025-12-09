@@ -12,6 +12,7 @@ import Transparency from './pages/Transparency';
 import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 import Auth from './pages/Auth';
+import UserDashboard from './pages/UserDashboard';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +37,7 @@ const Navbar: React.FC = () => {
           <Link to="/" className="flex items-center space-x-2">
             {/* Logo Replacement */}
             <img 
-              src="./assets/logo.png" 
+              src="/assets/logo.jpg" 
               alt="Hanny's Hive Logo" 
               className="h-10 w-auto object-contain"
               onError={(e) => {
@@ -74,8 +75,8 @@ const Navbar: React.FC = () => {
                        Admin Dashboard
                      </Link>
                   ) : (
-                    <Link to="/donate" className="text-gray-400 hover:text-white px-3 py-2 text-xs">
-                       My Dashboard
+                    <Link to="/dashboard" className="text-gray-400 hover:text-white px-3 py-2 text-xs">
+                       My Hive
                     </Link>
                   )}
                 </>
@@ -117,8 +118,8 @@ const Navbar: React.FC = () => {
             ))}
              {user ? (
                <div className="border-t border-gray-700 pt-2 mt-2">
-                 <Link to={isAdmin ? "/admin" : "/donate"} className="block px-3 py-2 text-white font-bold">
-                   {isAdmin ? 'Admin Dashboard' : 'My Dashboard'}
+                 <Link to={isAdmin ? "/admin" : "/dashboard"} className="block px-3 py-2 text-white font-bold">
+                   {isAdmin ? 'Admin Dashboard' : 'My Hive Dashboard'}
                  </Link>
                  <button onClick={signOut} className="block w-full text-left px-3 py-2 text-gray-500 text-sm">Sign Out</button>
                </div>
@@ -140,7 +141,7 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <img 
-                src="./assets/logo.png" 
+                src="/assets/logo.jpg" 
                 alt="Logo" 
                 className="h-8 w-auto grayscale opacity-80"
                 onError={(e) => {
@@ -209,6 +210,7 @@ const App: React.FC = () => {
               <Route path="/admin" element={<Admin />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
             </Routes>
           </main>
           <Footer />

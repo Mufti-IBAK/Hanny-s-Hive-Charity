@@ -1,32 +1,48 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Users, Calendar, DollarSign, Image, LogOut, 
-  Menu, ChevronLeft, Search, Mail, AlertCircle, CheckCircle, Upload, Plus
+  Users, Calendar, Image, LogOut, 
+  Menu, ChevronLeft, Search, Mail, AlertCircle, CheckCircle, Upload
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { AdminDonorView, ImpactStory } from '../types';
+import { AdminDonorView } from '../types';
+import gsap from 'gsap';
 
 // Components for different Admin Views
 const Overview: React.FC<{ users: AdminDonorView[] }> = ({ users }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".overview-card", {
+        y: 20,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 0.6,
+        ease: "power2.out"
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   const unpaidCount = users.filter(u => u.current_month_status === 'Unpaid' && u.pledge_status === 'active').length;
   const totalActive = users.filter(u => u.pledge_status === 'active').length;
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-hive-red">
+    <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="overview-card bg-white p-6 rounded-xl shadow-sm border-l-4 border-hive-red">
         <div className="text-gray-500 text-sm font-bold uppercase mb-1">Unpaid Pledges (This Month)</div>
         <div className="text-3xl font-bold text-hive-red">{unpaidCount}</div>
         <div className="text-xs text-gray-500 mt-2">Needs reminder</div>
       </div>
-      <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-black">
+      <div className="overview-card bg-white p-6 rounded-xl shadow-sm border-l-4 border-black">
         <div className="text-gray-500 text-sm font-bold uppercase mb-1">Active Hive Members</div>
         <div className="text-3xl font-bold">{totalActive}</div>
         <div className="text-xs text-green-500 mt-2 font-bold">Consistent Donors</div>
       </div>
-      <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-gray-400">
+      <div className="overview-card bg-white p-6 rounded-xl shadow-sm border-l-4 border-gray-400">
         <div className="text-gray-500 text-sm font-bold uppercase mb-1">Next Distribution</div>
         <div className="text-3xl font-bold">30th</div>
         <div className="text-xs text-gray-500 mt-2">Prepare Logistics</div>
@@ -38,6 +54,11 @@ const Overview: React.FC<{ users: AdminDonorView[] }> = ({ users }) => {
 const UserManagement: React.FC<{ users: AdminDonorView[] }> = ({ users }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'All' | 'Unpaid'>('All');
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.from(tableRef.current, { opacity: 0, y: 20, duration: 0.8, ease: "power2.out" });
+  }, []);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -52,7 +73,7 @@ const UserManagement: React.FC<{ users: AdminDonorView[] }> = ({ users }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div ref={tableRef} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-6 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
         <h3 className="font-bold text-lg">Hive Donors Database</h3>
         <div className="flex gap-2 w-full md:w-auto">
@@ -143,19 +164,23 @@ const GalleryUpload: React.FC = () => {
     image_url: '' 
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.from(containerRef.current, { opacity: 0, scale: 0.95, duration: 0.5, ease: "back.out(1.7)" });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg(null);
 
-    // Validation
-    const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
-    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
-    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
-    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
-    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+    const urlPattern = new RegExp('^(https?:\\/\\/)?'+ 
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ 
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ 
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ 
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ 
+    '(\\#[-a-z\\d_]*)?$','i'); 
 
     if (!urlPattern.test(formData.image_url)) {
       setErrorMsg("Please enter a valid Image URL (must start with http/https).");
@@ -183,7 +208,7 @@ const GalleryUpload: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+    <div ref={containerRef} className="max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 p-8">
       <h3 className="font-bold text-xl mb-6 flex items-center">
         <Upload className="h-5 w-5 mr-2" /> Add New Impact Story
       </h3>
@@ -238,10 +263,8 @@ const GalleryUpload: React.FC = () => {
               value={formData.image_url}
               onChange={e => setFormData({...formData, image_url: e.target.value})}
             />
-            {/* Note: File upload logic requires setting up Storage policies completely. 
-                For the client's "ease", a URL is simplest unless we build a full drag/drop. */}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Host images on Cloudinary or Imgur for now, or use Supabase Storage if configured.</p>
+          <p className="text-xs text-gray-500 mt-1">Host images on Cloudinary or Imgur for now.</p>
         </div>
 
         <div>
