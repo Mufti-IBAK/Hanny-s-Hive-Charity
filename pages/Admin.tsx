@@ -140,12 +140,29 @@ const GalleryUpload: React.FC = () => {
     category: 'Orphans',
     date: '',
     description: '',
-    image_url: '' // In a real app with storage, this would be a file input
+    image_url: '' 
   });
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
+
+    // Validation
+    const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+
+    if (!urlPattern.test(formData.image_url)) {
+      setErrorMsg("Please enter a valid Image URL (must start with http/https).");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.from('impact_stories').insert([{
         title: formData.title,
@@ -159,7 +176,7 @@ const GalleryUpload: React.FC = () => {
       alert('Story added successfully!');
       setFormData({ title: '', category: 'Orphans', date: '', description: '', image_url: '' });
     } catch (error: any) {
-      alert(error.message);
+      setErrorMsg(error.message);
     } finally {
       setLoading(false);
     }
@@ -170,6 +187,8 @@ const GalleryUpload: React.FC = () => {
       <h3 className="font-bold text-xl mb-6 flex items-center">
         <Upload className="h-5 w-5 mr-2" /> Add New Impact Story
       </h3>
+      {errorMsg && <div className="mb-4 bg-red-100 text-red-700 p-3 rounded text-sm">{errorMsg}</div>}
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Story Title</label>

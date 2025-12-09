@@ -1,9 +1,17 @@
+
 import React, { useState } from 'react';
 import { FaqItem } from '../types';
-import { Phone, Mail, MapPin, Plus, Minus } from 'lucide-react';
+import { Phone, Mail, MapPin, Plus, Minus, Send } from 'lucide-react';
 
 const Contact: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [status, setStatus] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   const faqs: FaqItem[] = [
     {
@@ -23,6 +31,33 @@ const Contact: React.FC = () => {
       answer: "We love volunteers! Fill out the contact form with the subject 'Volunteer' and we will add you to our WhatsApp coordination group."
     }
   ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus(null);
+
+    // Validation
+    if (!formData.name.trim() || !formData.message.trim()) {
+      setStatus({ type: 'error', text: 'Name and Message are required.' });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setStatus({ type: 'error', text: 'Please enter a valid email address.' });
+      return;
+    }
+
+    // Success Mock
+    setStatus({ type: 'success', text: 'Message sent! An admin will reply via WhatsApp/Email shortly.' });
+    setFormData({ name: '', email: '', subject: '', message: '' });
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -53,14 +88,49 @@ const Contact: React.FC = () => {
             </div>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {status && (
+               <div className={`p-3 rounded text-sm ${status.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                 {status.text}
+               </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
-              <input type="text" placeholder="Name" className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" />
-              <input type="email" placeholder="Email" className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" />
+              <input 
+                type="text" 
+                name="name"
+                placeholder="Name" 
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" 
+              />
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Email" 
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" 
+              />
             </div>
-            <input type="text" placeholder="Subject (e.g., Verification, Donation, Volunteering)" className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" />
-            <textarea placeholder="Your Message" rows={5} className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none"></textarea>
-            <button className="bg-black text-white font-bold py-3 px-8 rounded hover:bg-gray-800 transition">Send Message</button>
+            <input 
+              type="text" 
+              name="subject"
+              placeholder="Subject (e.g., Verification, Donation, Volunteering)" 
+              value={formData.subject}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none" 
+            />
+            <textarea 
+              name="message"
+              placeholder="Your Message" 
+              rows={5} 
+              value={formData.message}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-300 rounded focus:border-hive-red outline-none"
+            ></textarea>
+            <button className="bg-black text-white font-bold py-3 px-8 rounded hover:bg-gray-800 transition flex items-center">
+               <Send className="h-4 w-4 mr-2" /> Send Message
+            </button>
           </form>
         </div>
 

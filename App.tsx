@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Hexagon, Menu, X, Phone, Instagram, Twitter, ShieldCheck } from 'lucide-react';
+import { Menu, X, Phone, Instagram, Twitter, ShieldCheck } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Home from './pages/Home';
@@ -34,8 +34,18 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-2">
-            <Hexagon className="h-8 w-8 text-hive-red fill-current" />
-            <span className="font-bold text-xl tracking-tight">Hanny's Hive</span>
+            {/* Logo Replacement */}
+            <img 
+              src="./assets/logo.png" 
+              alt="Hanny's Hive Logo" 
+              className="h-10 w-auto object-contain"
+              onError={(e) => {
+                // Fallback if image not found
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <span className="hidden font-bold text-xl tracking-tight text-hive-red">Hanny's Hive</span> 
           </Link>
           
           <div className="hidden md:block">
@@ -129,8 +139,16 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Hexagon className="h-6 w-6 text-hive-red" />
-              <span className="font-bold text-lg">Hanny's Hive</span>
+              <img 
+                src="./assets/logo.png" 
+                alt="Logo" 
+                className="h-8 w-auto grayscale opacity-80"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <span className="hidden font-bold text-lg text-hive-red">Hanny's Hive</span>
             </div>
             <p className="text-gray-400 text-sm">
               Uplifting orphans, widows, and the less privileged through sustainable support.

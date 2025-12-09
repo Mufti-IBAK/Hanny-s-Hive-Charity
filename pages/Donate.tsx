@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DonationTier } from '../types';
 import { Check, Heart, Shield } from 'lucide-react';
@@ -6,6 +7,15 @@ const Donate: React.FC = () => {
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('monthly');
   const [selectedAmount, setSelectedAmount] = useState<number>(10000);
   const [customAmount, setCustomAmount] = useState<string>('');
+  
+  // Form State
+  const [donorDetails, setDonorDetails] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    isAnonymous: false
+  });
+  const [error, setError] = useState<string | null>(null);
 
   const tiers: DonationTier[] = [
     {
@@ -36,6 +46,39 @@ const Donate: React.FC = () => {
   const handleCustomAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomAmount(e.target.value);
     setSelectedAmount(0);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setDonorDetails(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleDonation = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validation
+    const amount = selectedAmount || Number(customAmount);
+    if (amount <= 0) {
+      setError('Please select or enter a valid donation amount.');
+      return;
+    }
+    if (!donorDetails.firstName.trim() || !donorDetails.lastName.trim()) {
+      setError('Please provide your full name.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(donorDetails.email)) {
+      setError('Please provide a valid email address.');
+      return;
+    }
+
+    // Success Placeholder
+    alert(`Processing ${frequency} donation of ₦${amount.toLocaleString()} for ${donorDetails.firstName}`);
+    // Here you would trigger Flutterwave/Paystack logic
   };
 
   return (
@@ -110,6 +153,7 @@ const Donate: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Or enter a custom amount (₦)</label>
             <input
               type="number"
+              min="100"
               value={customAmount}
               onChange={handleCustomAmountChange}
               placeholder="e.g. 50000"
@@ -120,29 +164,61 @@ const Donate: React.FC = () => {
         {/* Donor Form */}
         <div className="bg-white p-8 rounded-xl shadow-lg border-t-4 border-hive-red">
           <h3 className="text-2xl font-bold mb-6">Complete Donation</h3>
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+          
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleDonation} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" />
+                <input 
+                  type="text" 
+                  name="firstName"
+                  value={donorDetails.firstName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" />
+                <input 
+                  type="text" 
+                  name="lastName"
+                  value={donorDetails.lastName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" 
+                />
               </div>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" />
+              <input 
+                type="email" 
+                name="email"
+                value={donorDetails.email}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-hive-red focus:border-hive-red outline-none transition" 
+              />
             </div>
 
             <div className="flex items-start">
                <div className="flex items-center h-5">
-                 <input id="comments" type="checkbox" className="focus:ring-hive-red h-4 w-4 text-hive-red border-gray-300 rounded" />
+                 <input 
+                    id="isAnonymous" 
+                    name="isAnonymous"
+                    type="checkbox" 
+                    checked={donorDetails.isAnonymous}
+                    onChange={handleInputChange}
+                    className="focus:ring-hive-red h-4 w-4 text-hive-red border-gray-300 rounded" 
+                  />
                </div>
                <div className="ml-3 text-sm">
-                 <label htmlFor="comments" className="font-medium text-gray-700">Make this donation anonymous</label>
+                 <label htmlFor="isAnonymous" className="font-medium text-gray-700">Make this donation anonymous</label>
                </div>
              </div>
 

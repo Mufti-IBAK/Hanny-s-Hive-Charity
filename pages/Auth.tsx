@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { Hexagon, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -14,15 +14,40 @@ const Auth: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
   const navigate = useNavigate();
 
+  // Basic Validation Logic
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({ type: 'error', text: 'Please enter a valid email address.' });
+      return false;
+    }
+    if (password.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters long.' });
+      return false;
+    }
+    if (isSignUp) {
+      if (!fullName.trim()) {
+        setMessage({ type: 'error', text: 'Full Name is required.' });
+        return false;
+      }
+      if (!phoneNumber.trim() || phoneNumber.length < 10) {
+        setMessage({ type: 'error', text: 'Please enter a valid WhatsApp number.' });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage(null);
+
+    if (!validateForm()) return;
+
+    setLoading(true);
 
     try {
       if (isSignUp) {
-        if (!phoneNumber) throw new Error("WhatsApp number is required for verification.");
-
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -41,7 +66,6 @@ const Auth: React.FC = () => {
           password,
         });
         if (error) throw error;
-        // Navigation is handled by AuthContext state change or manual push
         navigate('/admin'); 
       }
     } catch (error: any) {
@@ -54,10 +78,18 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center text-hive-red">
-           <Hexagon className="h-12 w-12 fill-current" />
+        <div className="flex justify-center text-hive-red mb-4">
+           {/* Logo Replacement */}
+           <img 
+              src="./assets/logo.png" 
+              alt="Hanny's Hive" 
+              className="h-24 w-auto object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Logo'; // Fallback
+              }}
+            />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
           {isSignUp ? 'Join the Hive' : 'Sign in to your account'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
@@ -75,7 +107,6 @@ const Auth: React.FC = () => {
                   <div className="mt-1">
                     <input
                       type="text"
-                      required={isSignUp}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
@@ -91,7 +122,6 @@ const Auth: React.FC = () => {
                     </div>
                     <input
                       type="tel"
-                      required={isSignUp}
                       placeholder="+234..."
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -108,7 +138,6 @@ const Auth: React.FC = () => {
               <div className="mt-1">
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
@@ -121,7 +150,6 @@ const Auth: React.FC = () => {
               <div className="mt-1">
                 <input
                   type="password"
-                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-hive-red focus:border-hive-red sm:text-sm"
